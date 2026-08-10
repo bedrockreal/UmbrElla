@@ -44,10 +44,29 @@ li		3, FREE_CAMERA_ACTIVE
 b		write_free_camera
 
 free_camera_mode:
+# load analogue stick, and force it to zero
+li		0, 0
+lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
+lfs		13, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9)
+stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9)
+lfs		12, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
+stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
+
+# add analogue delta to free camera coordinates
+lis		9, FREE_CAMERA_COORDS_ADDR@ha
+addi	9, 9, FREE_CAMERA_COORDS_ADDR@l
+lfs		0, 0x8(9) # y
+fadds	0, 13, 0
+stfs	0, 0x8(9)
+lfs		0, 0x4(9) # z
+fadds	0, 12, 0
+stfs	0, 0x4(9)
+
 # exit if anything not in IGNORE_BUTTON_MASK is pressed
 lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
 lhz		0, BUTTON_PRESS_FROM_PLAYER_PARAMETERS(9)
-andi.	10, 10, FREE_CAMERA_EXIT_BUTTON_MASK
+andi.	0, 0, FREE_CAMERA_EXIT_BUTTON_MASK
+
 beq		free_camera_end
 # bne		exit_free_camera_mode
 # b		free_camera_end
