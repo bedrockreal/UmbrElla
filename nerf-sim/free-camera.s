@@ -1,13 +1,12 @@
-# 20416dbc 3f608039
-# c2424fb4 ........
+#+ 20416dbc 3f608039
+#+ c2424fb0 000000..
 
-# note: inject into loadShot @ 0x80424fb4
-# if mode is not training && state is not 2D view,
-# then display only the first SIM_LINE_VISIBLE_FRAMES of the sim line
-
-# let's combine the free_camera_mode
+# note: split free camera driver code apart
 
 .include "constants.asm"
+
+# restore replaced instruction
+stw		0, 0x1c4(1)
 
 free_camera_start:
 lis		9, FREE_CAMERA_STATUS_ADDR@ha
@@ -36,8 +35,8 @@ stw		0, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
 li		5, 0
 li		6, 0
 li		7, 0
-lis		9, FREE_CAMERA_COORDS_ADDR@ha
-addi	9, 9, FREE_CAMERA_COORDS_ADDR@l
+lis		9, FREE_CAMERA_DELTA_ADDR@ha
+addi	9, 9, FREE_CAMERA_DELTA_ADDR@l
 stswi	5, 9, 12
 
 li		3, FREE_CAMERA_ACTIVE
@@ -53,8 +52,8 @@ lfs		12, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
 stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
 
 # add analogue delta to free camera coordinates
-lis		9, FREE_CAMERA_COORDS_ADDR@ha
-addi	9, 9, FREE_CAMERA_COORDS_ADDR@l
+lis		9, FREE_CAMERA_DELTA_ADDR@ha
+addi	9, 9, FREE_CAMERA_DELTA_ADDR@l
 lfs		0, 0x8(9) # y
 fadds	0, 13, 0
 stfs	0, 0x8(9)
@@ -62,6 +61,54 @@ lfs		0, 0x4(9) # z
 fadds	0, 12, 0
 stfs	0, 0x4(9)
 
+check_drop_ball:
+# check if already in drop ball state
+lis		9, DROP_BALL_STATUS_ADDR@ha
+lwz		10, DROP_BALL_STATUS_ADDR@l(9)
+cmpwi	10, DROP_BALL_PROCEED
+beq		drop_ball_third_pass
+
+# press the free camera activate combo to drop ball in practice mode
+lis		9, GAME_MODE_ADDR@ha
+lwz		10, GAME_MODE_ADDR@l(9)
+cmpwi	10, GAME_MODE_PRACTICE
+lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
+lhz		10, BUTTON_HOLD_FROM_PLAYER_PARAMETERS(9)
+cmpwi	cr6, 10, MODIFIER_MASK+FREE_CAMERA_ACTIVATE_PRESS_MASK
+lhz		10, BUTTON_PRESS_FROM_PLAYER_PARAMETERS(9)
+cmpwi	cr7, 10, FREE_CAMERA_ACTIVATE_PRESS_MASK
+crand	cr6*4+eq, cr6*4+eq, cr7*4+eq
+crand	cr0*4+eq, cr6*4+eq, cr0*4+eq
+bne		free_camera_check_exit
+
+# in drop ball state now
+
+drop_ball_first_pass:
+li		10, ACTION_STATE_SWING
+stw		10, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
+li		10, DROP_BALL_PROCEED
+lis		9, DROP_BALL_IMPACT_WAIT_ADDR@ha
+stw		10, DROP_BALL_IMPACT_WAIT_ADDR@l(9)
+b		drop_ball_store_status
+
+drop_ball_third_pass:
+li		10, GREAT_GAMEPLAY_STATUS_BALL_FLYING
+stw		10, GAMEPLAY_STATUS_FROM_GREAT_PLAYER_STATE(31)
+li		10, DROP_BALL_INACTIVE
+lis		9, DROP_BALL_IMPACT_WAIT_ADDR@ha
+stw		10, DROP_BALL_IMPACT_WAIT_ADDR@l(9)
+# note: fall through to drop_ball_store_status
+
+drop_ball_store_status:
+lis		9, DROP_BALL_STATUS_ADDR@ha
+stw		10, DROP_BALL_STATUS_ADDR@l(9)
+
+# this is needed
+cmpwi	10, DROP_BALL_INACTIVE
+beq		exit_free_camera_mode
+b		free_camera_end
+
+free_camera_check_exit:
 # exit if anything not in IGNORE_BUTTON_MASK is pressed
 lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
 lhz		0, BUTTON_PRESS_FROM_PLAYER_PARAMETERS(9)
@@ -79,32 +126,3 @@ lis		9, FREE_CAMERA_STATUS_ADDR@ha
 stw		3, FREE_CAMERA_STATUS_ADDR@l(9)
 
 free_camera_end:
-
-modify_sim:
-# check if action state is not 2d view
-lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
-lwz		3, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
-addic.	3, 3, -ACTION_STATE_2D_VIEW
-li		3, NERF_SIM_NO_HEIGHT_MAP
-beq		write_nerf_sim
-
-# check if we are not putting
-lwz		3, CLUB_ID_FROM_PLAYER_PARAMETERS(9)
-addic.	3, 3, -CLUB_ID_PUTTER
-beq		write_nerf_sim
-
-# check for practice mode
-lis		9, GAME_MODE_ADDR@ha
-lwz		3, GAME_MODE_ADDR@l(9)
-addic.	3, 3, -GAME_MODE_PRACTICE
-beq		write_nerf_sim
-
-# set status = 1
-li		3, NERF_SIM_NO_STAR
-
-write_nerf_sim:
-lis		9, NERF_SIM_STATUS_ADDR@ha
-stw		3, NERF_SIM_STATUS_ADDR@l(9)
-
-end:
-li		3, 0xad
