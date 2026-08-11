@@ -89,6 +89,19 @@ stw		10, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
 li		10, DROP_BALL_PROCEED
 lis		9, DROP_BALL_IMPACT_WAIT_ADDR@ha
 stw		10, DROP_BALL_IMPACT_WAIT_ADDR@l(9)
+
+# now r10 must be fixed
+# set the ball's position
+# load
+lis		9, FREE_CAMERA_ABS_COORDS_ADDR@ha
+addi	9, 9, FREE_CAMERA_ABS_COORDS_ADDR@l
+lswi	3, 9, 12
+
+# store
+lwz		9, BALL_FLYING_STATE_BASE_FROM_GREAT_PLAYER_STATE(31)
+addi	9, 9, BALL_FLYING_STATE_FROM_BASE+BALL_POSITION_FROM_BALL_FLYING_STATE
+stswi	3, 9, 12
+
 b		drop_ball_store_status
 
 drop_ball_third_pass:
