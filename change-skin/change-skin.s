@@ -2,12 +2,22 @@
 #	inject before 0x804fe378, only executed if player is at the GBA CSS and not changing character
 #	free registers: r0, r9, r10, r11
 
-main:
+# check for the right file
+.4byte	0x2040e374
+.4byte	0x409e000c
+
+# forces the game to load GBA data from 1st slot
+.4byte	0x044165ac
+li		28, 0
+
+# main code: inject into 0x8040e378
+.4byte	0xc240e378
+.4byte	0x00000008
 
 #	check if (r26 & 0x800) != 0, if and only if the Y button is pressed.
 #	We want to activate skin change when the Y button is first pressed (don't change when holding). The previous value of r26 is stored in 0x801d1c24 (contains unused, BBA-related debug string), with value 64 62 61 6e (not interfering with 0x800)
 
-# as of note on line 23, lis is moved here
+# as of note on line 33, lis is moved here
 lis		9, 0x804f
 
 lis		11, 0x801d
@@ -50,3 +60,8 @@ stw		10, -0x2794(11)
 YButtonNotPressed:
 
 #	no need to restore replaced instruction 'lis	r9, 0x804f'
+
+# end gecko code
+.4byte	0x00000000
+.4byte	0xe0000000
+.4byte	0x80008000
