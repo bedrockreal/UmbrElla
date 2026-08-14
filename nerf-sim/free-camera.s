@@ -107,9 +107,17 @@ b		drop_ball_store_status
 drop_ball_third_pass:
 li		10, GREAT_GAMEPLAY_STATUS_BALL_FLYING
 stw		10, GAMEPLAY_STATUS_FROM_GREAT_PLAYER_STATE(31)
+# also increment stroke count
+lwz		9, BALL_FLYING_STATE_BASE_FROM_GREAT_PLAYER_STATE(31)
+lbz		10, STROKE_COUNT_BYTE_FROM_BASE(9)
+addi	10, 10, 1
+stb		10, STROKE_COUNT_BYTE_FROM_BASE(9)
+
+# done -> set status := inactive
 li		10, DROP_BALL_INACTIVE
 lis		9, DROP_BALL_IMPACT_WAIT_ADDR@ha
 stw		10, DROP_BALL_IMPACT_WAIT_ADDR@l(9)
+
 # note: fall through to drop_ball_store_status
 
 drop_ball_store_status:

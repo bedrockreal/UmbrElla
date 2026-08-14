@@ -24,10 +24,19 @@ beq		write_nerf_sim
 lis		9, GAME_MODE_ADDR@ha
 lwz		3, GAME_MODE_ADDR@l(9)
 addic.	3, 3, -GAME_MODE_PRACTICE
-beq		write_nerf_sim
-
-# set status = 1
+# default: partial sim line
 li		3, NERF_SIM_NO_STAR
+
+# if not in training, force this mode
+bne		write_nerf_sim
+
+# in practice: make sim line visible by Z + A hold
+lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
+lhz		10, BUTTON_HOLD_FROM_PLAYER_PARAMETERS(9)
+andi.	10, 10, PRACTICE_RESTORE_SIM_HOLD_MASK
+cmpwi	10, PRACTICE_RESTORE_SIM_HOLD_MASK
+bne		write_nerf_sim
+li		3, NERF_SIM_INACTIVE
 
 write_nerf_sim:
 lis		9, NERF_SIM_STATUS_ADDR@ha
