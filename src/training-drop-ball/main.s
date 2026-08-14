@@ -83,7 +83,7 @@ stw		0, IMPACT_WAIT_ADDR@l(9)
 b		set_indicator_addr_and_end
 
 drop_ball_third_pass:
-# set greatGameState->gameplayStatus = 7
+# set greatPlayerState->gameplayStatus = 7
 li		0, 7
 stw		0, 0X24(31)
 
