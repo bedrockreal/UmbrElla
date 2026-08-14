@@ -1,4 +1,6 @@
-#+ 20416dbc 3f608039
+# check for the right file
+.4byte	0x20416dbc
+.4byte	0x3f608039
 
 .include "constants.asm"
 

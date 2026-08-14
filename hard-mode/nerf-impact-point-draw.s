@@ -1,5 +1,10 @@
-#+ 20416dbc 3f608039
-#+ c242fa90 00000004
+# check for the right file
+.4byte	0x20416dbc
+.4byte	0x3f608039
+
+# inject asm into 0x8042fa90
+.4byte	0xc242fa90
+.4byte	0x00000004
 
 # hides the impact point when action_state == SWING/IMPACT == 12
 # if action state == SWING, skip the impact point == impact marker thing, jump to 0x8042fba0,
@@ -20,9 +25,11 @@ lwz		0, 0x64(25)
 
 first_pass_end:
 
-# for gecko
+# end inject asm, pad for gecko
 nop
 .4byte	0x00000000
+
+# inject asm into 0x8042fcf8
 .4byte	0xc242fcf8
 .4byte	0x00000005
 
@@ -39,3 +46,8 @@ bctr
 
 second_pass_end:
 lis		9, 0x804f
+
+# end gecko code
+.4byte	0x00000000
+.4byte	0xe0000000
+.4byte	0x80008000
