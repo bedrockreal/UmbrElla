@@ -17,8 +17,8 @@ $(BUILD_DIR)/%.txt:	$(BUILD_DIR)/%.bin
 
 $(BUILD_DIR)/%.bin:	%.s
 	@mkdir -p $(dir $@)
-	# TODO: patch assembly with custom C program
-	@$(DEVKITPPC)/bin/powerpc-eabi-as -mregnames -mgekko -mbig -I$(INC_DIRS) $< -o $@
+	# TODO: patch assembly with custom program
+	@$(DEVKITPPC)/bin/powerpc-eabi-as -mregnames -mgekko -mbig -I$(INC_DIRS) -I$(dir $<) $< -o $@
 
 .PHONY: clean
 clean:

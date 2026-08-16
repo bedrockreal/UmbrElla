@@ -1,9 +1,25 @@
-#+ 20416dbc 3f608039
-#+ c2424fb0 000000..
+# Overwrite debug strings, if we haven't
+# note: reserve 0x100 bytes from 0x801d1c20
+
+.4byte	0x201d1c24
+.4byte	0x6462616e
+.4byte	0x001d1c20
+.4byte	0x00ff0000
+
+# check for the right file
+.4byte	0x20416dbd
+.4byte	0x3f608039
 
 # note: split free camera driver code apart
 
 .include "constants.asm"
+
+# set NO_STANDALONE for all sub-codes included by this file
+.set	NO_STANDALONE, 1
+
+# inject the main code
+.long	0xc2424fb0
+.long	0x0000002c
 
 # restore replaced instruction
 stw		0, 0x1c4(1)
@@ -147,3 +163,44 @@ lis		9, FREE_CAMERA_STATUS_ADDR@ha
 stw		3, FREE_CAMERA_STATUS_ADDR@l(9)
 
 free_camera_end:
+.zero	4
+
+# add the code that modifies shot parameters
+.include "drop-ball-mod-params.s"
+
+# restore camera-related code if free-camera mode != 1
+.long	0x221d1c20
+.long	0x00000001
+
+.long	0x04411f60
+.long	0x40a102c4 # ble 0x80412224
+
+.long	0x04411fcc
+stfs	13, 0x148(1)
+
+.long	0x04410cec
+lhz		0, 0x10c(3)
+
+.long	0x0441293c
+fabs	0, 0
+
+# if free-camera mode == 1,
+.long	0x201d1c21
+.long	0x00000001
+
+# remove (if 0.98 < cameraSimLine%) check
+.long	0x04411f60
+nop
+
+# don't move impact marker with Z + analogue stick
+.long	0x04410cec
+li		0, 0
+
+# inject code modifying the camera
+.include "camera-coords.s"
+.include "camera-delta.s"
+.include "camera-front.s"
+
+# that's it
+.4byte	0xe0000000
+.4byte	0x80008000

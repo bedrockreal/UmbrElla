@@ -1,9 +1,16 @@
-#+ c2425c34 000000..
+.if		(NO_STANDALONE != 1)
+# check for the right file
+.4byte	0x20416dbc
+.4byte	0x3f608039
+.endif
+
+.include "constants.asm"
 
 # note: inject into 0x80425d90
 # modifies the sim line's parameters
 
-.include "constants.asm"
+.long	0xc2425c34
+.long	0x00000008
 
 # check for free camera mode + drop ball proceed
 lis		3, FREE_CAMERA_STATUS_ADDR@ha
@@ -27,3 +34,12 @@ stw		4, NATURAL_SPIN_FROM_SHOT_PARAMETERS(3)
 
 end:
 lwz		0, 0xb14(30)
+
+# gecko inject endd pad
+nop
+.zero	4
+
+.if		(NO_STANDALONE != 1)
+.4byte	0xe0000000
+.4byte	0x80008000
+.endif
