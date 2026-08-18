@@ -11,27 +11,26 @@
 .long	0x00000006
 
 # note: scale stored delta by f0
+# note: r9, r0 and r10 are free. r3-r5 are already loaded
 
 # load f0 := 10
-lfs		0, 0x804ec478@l(9)
+lfs		0, CONST_10_ADDR@l(9)
 
-# load x, z, y
-lis		9, FREE_CAMERA_DELTA_ADDR@ha
-lfsu	13, FREE_CAMERA_DELTA_ADDR@l(9)
-lfsu	12, 0x4(9)
-lfsu	11, 0x4(9)
+# set up addresses and CTR
+lis		9, FREE_CAMERA_DELTA_ADDR@h
+ori		9, 9, FREE_CAMERA_DELTA_ADDR@l-0x4
+li		10, 3
+mtctr	10
+addi	10, 1, 0x144
 
-# multiply
+loop:
+lfsu	13, 0x4(9)
 fmuls	13, 13, 0
-fmuls	12, 12, 0
-fmuls	11, 11, 0
-
-# store
-stfs	13, 0x148(1)
-stfs	12, 0x14c(1)
-stfs	11, 0x150(1)
+stfsu	13, 0x4(10)
+bdnz+	loop
 
 # gecko inject end pad
+nop
 .zero	4
 
 .if		(NO_STANDALONE != 1)

@@ -4,8 +4,6 @@
 .4byte	0x3f608039
 .endif
 
-#+ c241293c 000000..
-
 .include "constants.asm"
 
 .long	0xc241293c
