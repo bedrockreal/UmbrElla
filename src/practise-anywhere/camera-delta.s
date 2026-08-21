@@ -1,10 +1,10 @@
 .if		(NO_STANDALONE != 1)
+.include "constants.asm"
 # check for the right file
 .4byte	0x20416dbc
 .4byte	0x3f608039
 .endif
 
-.include "constants.asm"
 
 # inject into 0x80411fcc
 .long	0xc2411fcc
@@ -17,8 +17,9 @@
 lfs		0, CONST_10_ADDR@l(9)
 
 # set up addresses and CTR
-lis		9, FREE_CAMERA_DELTA_ADDR@h
-ori		9, 9, FREE_CAMERA_DELTA_ADDR@l-0x4
+.set	__TMP, FREE_CAMERA_DELTA_ADDR-0x4
+lis		9, __TMP@h
+ori		9, 9, __TMP@l
 li		10, 3
 mtctr	10
 addi	10, 1, 0x144
