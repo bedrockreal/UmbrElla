@@ -1,3 +1,6 @@
+# note: due to how big this gecko code is, the game sometimes crashes when you apply this code alongside other codes on a real Wii (perhaps also GameCube).
+# this may be an issue with the gecko code size.
+
 # Overwrite debug strings, if we haven't
 # note: reserve 0x100 bytes from 0x801d1c20
 
@@ -19,7 +22,7 @@
 
 # inject the main code
 .long	0xc2424fb0
-.long	0x0000002c
+.long	0x0000002a
 
 # restore replaced instruction
 stw		0, 0x1c4(1)
@@ -33,7 +36,7 @@ beq		free_camera_mode
 free_camera_activate_check:
 lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
 lwz		3, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
-addic.	3, 3, -ACTION_STATE_IDLE
+subic.	3, 3, ACTION_STATE_IDLE
 bne		free_camera_end
 
 # check Z hold + X press
@@ -60,22 +63,36 @@ b		write_free_camera
 
 free_camera_mode:
 # load analogue stick, and force it to zero
-li		0, 0
+# li		0, 0
+# lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
+# lfs		13, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9)
+# stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9)
+# lfs		12, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
+# stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
+
+# try using paired singles instructions
 lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
-lfs		13, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9)
-stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9)
-lfs		12, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
-stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
+psq_l	13, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9), 0, 0
+ps_sub	12, 13, 13
+psq_st	12, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9), 0, 0
 
 # add analogue delta to free camera coordinates
 lis		9, FREE_CAMERA_DELTA_ADDR@ha
 addi	9, 9, FREE_CAMERA_DELTA_ADDR@l
-lfs		0, 0x8(9) # y
-fadds	0, 13, 0
-stfs	0, 0x8(9)
-lfs		0, 0x4(9) # z
-fadds	0, 12, 0
-stfs	0, 0x4(9)
+
+# swap the floats in f13 first (y, z) -> (z, y), then add and store
+ps_merge10		13, 13, 13
+psq_l	12, 0x4(9), 0, 0
+ps_add	12, 12, 13
+psq_st	12, 0x4(9), 0, 0
+
+# the old instrs.
+# lfs		0, 0x8(9) # y
+# fadds	0, 13, 0
+# stfs	0, 0x8(9)
+# lfs		0, 0x4(9) # z
+# fadds	0, 12, 0
+# stfs	0, 0x4(9)
 
 check_drop_ball:
 # check if already in drop ball state
