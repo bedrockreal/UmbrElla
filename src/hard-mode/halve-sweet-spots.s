@@ -1,8 +1,10 @@
+.if		(NO_STANDALONE != 1)
+.include "constants.asm"
+
 # check for the right file
 .4byte	0x20416dbc
 .4byte	0x3f608039
-
-.include "constants.asm"
+.endif
 
 .set	SWEET_SPOT_SIZE_ARR_ADDR,	0x804ec700
 
@@ -36,5 +38,7 @@ nop
 nop
 nop
 
+.if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif

@@ -1,8 +1,10 @@
+.if		(NO_STANDALONE != 1)
+.include "constants.asm"
+
 # check for the right file
 .4byte	0x20416dbc
 .4byte	0x3f608039
-
-.include "constants.asm"
+.endif
 
 # patch parameters set on first press when putting
 .4byte	0x06413df8
@@ -75,6 +77,7 @@ lis		9, CONST_1_OVER_4_ADDR@ha
 lfs		0, CONST_1_OVER_4_ADDR@l(9)
 
 # note: impact late: f0 +ve; impact early: f0 -ve
+# TODO: invert for lefty
 bge		jump
 fneg	0, 0
 
@@ -109,6 +112,7 @@ lwz		11, IMPACT_DELTA_FROM_IMPACT_STRUCT(9)
 .4byte	0x044cd304
 lfs		7, 0x50(31)
 
-
+.if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif

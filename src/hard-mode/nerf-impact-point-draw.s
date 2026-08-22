@@ -1,17 +1,19 @@
+.if		(NO_STANDALONE != 1)
+.include "constants.asm"
+
 # check for the right file
 .4byte	0x20416dbc
 .4byte	0x3f608039
+.endif
 
 # inject asm into 0x8042fa90
 .4byte	0xc242fa90
 .4byte	0x00000004
 
 # hides the impact point when action_state == SWING/IMPACT == 12
-# if action state == SWING, skip the impact point == impact marker thing, jump to 0x8042fba0,
+# if action state == SWING, skip the impact point == impact marker visual effect, jump to 0x8042fba0,
 # 0x8042fc38: 
 # note: the playerParameters is in r3
-
-.include "constants.asm"
 
 lwz		0, ACTION_STATE_FROM_PLAYER_PARAMETERS(3)
 cmpwi	0, ACTION_STATE_SWING
@@ -48,6 +50,9 @@ second_pass_end:
 lis		9, 0x804f
 
 # end gecko code
-.4byte	0x00000000
+.zero	4
+
+.if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif
