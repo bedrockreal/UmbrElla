@@ -7,57 +7,110 @@
 .endif
 
 # force manual swing, and set practice swing on A-A
-# TODO: fix putting
+# TODO: fix putting, fix slider on 2nd click
 # 1. don't draw right-to-left slider on auto swing
-.long	0xc6475738
+.long	0xc6475720
 .long	0x804758d0
+
 # 2. no RNG timing
 .long	0x04475ba4
 nop
+
 # 3. allow 3rd click on auto shot
 .long	0x0441405c
 nop
 # 4. no real shot if impact mode == auto
-.long	0x06414348
-.long	0x00000014
+# note: at 0x80414348, r9 := great player state
+# note: r10 == 0x80530000
+.long	0x0641434c
+.long	0x00000044
 li		30, 0
+stw		30, 0x7398(10) # set power meter display mode = 0, so that rangee marker can be seen
 li		0, ACTION_STATE_IDLE
 stw		0, ACTION_STATE_FROM_PLAYER_PARAMETERS(31)
-stb		30, LIE_DISPLAY_MODE_FROM_PLAYER_PARAMETERS(31)
-.long	0x4800000c
-.zero	4
+
+# 4.2: restore stroke count
+#                              Increment stroke count
+#                              LAB_80413ef4                                    XREF[1]:     80413e1c(j)  
+#         80413ef4 81 3f 02 5c     lwz        r9,0x25c(r31)
+#         80413ef8 81 69 00 08     lwz        r11,0x8(r9)
+#         80413efc 89 2b 01 bc     lbz        r9,0x1bc(r11)
+#         80413f00 39 29 00 01     addi       r9,r9,0x1
+#         80413f04 99 2b 01 bc     stb        r9,0x1bc(r11)
+#         80413f08 81 3f 02 5c     lwz        r9,0x25c(r31)
+#         80413f0c 80 69 00 18     lwz        param_1,0x18(r9)
+#         80413f10 48 00 13 d9     bl         FUN_804152e8                                     undefined FUN_804152e8(undefined
+#         80413f14 2c 03 00 00     cmpwi      param_1,0x0
+#         80413f18 41 82 00 18     beq        LAB_80413f30
+#         80413f1c 81 3f 02 5c     lwz        r9,0x25c(r31)
+#         80413f20 81 69 00 08     lwz        r11,0x8(r9)
+#         80413f24 89 2b 01 bd     lbz        r9,0x1bd(r11)
+#         80413f28 39 29 00 01     addi       r9,r9,0x1
+#         80413f2c 99 2b 01 bd     stb        r9,0x1bd(r11)
+
+lwz		11, BALL_FLYING_STATE_BASE_FROM_GREAT_PLAYER_STATE(9)
+lbz		3, HOLE_STROKE_COUNT_FROM_BASE(11)
+subi	3, 3, 1
+stb		3, HOLE_STROKE_COUNT_FROM_BASE(11)
+
+lwz		3, 0x18(9)
+
+# this is 0x80414370, bl to 0x804152e8
+.long	0x48000f39
+
+cmpwi	3, 0
+beq		end_restore_stroke_count
+
+lwz		9, GREAT_PLAYER_STATE_FROM_PLAYER_PARAMETERS(31)
+lwz		11, BALL_POSITION_FROM_BALL_FLYING_STATE(9)
+lbz		3, ROUND_STROKE_COUNT_FROM_BASE(11)
+subi	3, 3, 1
+stb		3, ROUND_STROKE_COUNT_FROM_BASE(11)
+
+end_restore_stroke_count:
+nop
 
 # 5. no impact anim on auto swing
-# 5.1: change if condition implementation
-# .long	0x06426148
-# .long	0x00000028
-# 
-# lis		11, IMPACT_STRUCT_ADDR@ha
-
 
 .long	0xc2426148
-.long	0x00000009
-
-# actionState == 12 && impact mode == auto && timer > 0 -> force no advance
+.long	0x0000000c
+# actionState == 12 && impact mode == auto && timer + anim frame >= 100 -> force no advance
 
 # r11, r9 free
 # check auto swing && impact timing > 0
+
+# check actionState == 12
 lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
 lwz		11, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
 cmpwi	11, ACTION_STATE_SWING
+
+# check auto swing
 lwz		11, IMPACT_MODE_FROM_PLAYER_PARAMETERS(9)
 cmpwi	cr7, 11, 1
+
+# load timer
 lis		9, IMPACT_TIMER_FOR_ANIM@ha
 lwz		11, IMPACT_TIMER_FOR_ANIM@l(9)
-cmpwi	cr6, 11, 0
+lwz		9, ANIM_FROM_GREAT_PLAYER_STATE(31)
+
+# load animation stopwatch, make it an integer
+# storing at FREE_CAMERA_ABS_COORDS_ADDR is fine as it would be overwritten in free camera mode
+lfs		0, STOPWATCH_FROM_ANIM(9)
+fctiwz	13, 0
+lis		9, FREE_CAMERA_ABS_COORDS_ADDR@h
+stfdu	13, FREE_CAMERA_ABS_COORDS_ADDR@l(9)
+lwz		9, 0x4(9)
+
+# check timer + stopwatch >= 100
+add		11, 11, 9
+cmpwi	cr6, 11, 99
 crand	cr7*4+eq, cr7*4+eq, cr6*4+gt
 crand	cr0*4+eq, cr0*4+eq, cr7*4+eq
 bne		end_delay_anim
 
-# force no advance anim
-.set	JUMP_ADDR,	0x80426170
-lis		9, JUMP_ADDR@h
-ori		9, 9, JUMP_ADDR@l
+# force no advance anim: jump to 0x80426170
+lis		9, 0x8042
+ori		9, 9, 0x6170
 mtctr	9
 bctr
 
@@ -65,12 +118,10 @@ end_delay_anim:
 # the original instr.
 cmpwi	7, 0
 
-nop
 .zero	4
 
 # 6. fix range marker after practice swing
-.long	0x044150ac
-nop
+# TODO
 
 # 7. reset Mario on 1st press
 .long	0xc2413ca4
@@ -116,7 +167,6 @@ end_skip_lie_collapse:
 nop
 .zero	4
 
-# .if		(BUTTON_PRESS_FROM_PLAYER_PARAMETERS == 0)
 # 8.3: on auto swing, don't set lie display mode
 .long	0x04413e7c
 nop
@@ -129,29 +179,8 @@ lwz		9, IMPACT_MODE_FROM_PLAYER_PARAMETERS(31)
 subi	9, 9, 1
 rlwinm	9, 9, 1, 30, 30
 .zero	4
-# .endif
 
-# 9. don't increment stroke count
-# TODO: if 'three-click putting' isn't activated, need increment stroke on A-A putt
-.long	0xc2413ef4
-.long	0x00000005
-
-lhz		9, BUTTON_PRESS_FROM_PLAYER_PARAMETERS(31)
-andi.	9, 9, 0x100
-beq		end_skip_increment_stroke
-
-lis		9, 0x8041
-ori		9, 9, 0x3f30
-mtctr	9
-bctr
-
-end_skip_increment_stroke:
-lwz		9, 0x25c(31)
-
-nop
-.zero	4
-
-# 10. don't decrement power shot
+# 9. don't decrement power shot
 # TODO
 
 .if		(NO_STANDALONE != 1)

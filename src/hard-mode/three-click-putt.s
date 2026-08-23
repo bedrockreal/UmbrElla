@@ -6,20 +6,20 @@
 .4byte	0x3f608039
 .endif
 
-# patch parameters set on first press when putting
-.4byte	0x06413df8
-.4byte	0x00000018
-li		0, ACTION_STATE_SWING
-li		3, 0x2a3
-stw		0, ACTION_STATE_FROM_PLAYER_PARAMETERS(31)
-nop
+# patch parameters set on first press when putting:
+# set sweetspot size := 16
+.long	0x06413df8
+.long	0x00000008
 li		0, PUTT_IMPACT_CAP_FRAMES
 stw		0, SWEETSPOT_SIZE_FROM_IMPACT_STRUCT(9)
+
+# now at 0x80413e00, jump to 0x80413e4c
+.long	0xc6413e00
+.long	0x80413e4c
 
 # write active club id to static addr, and always draw impact timing slider
 .4byte	0x064758f8
 .4byte	0x00000008
-
 lis		9, ACTIVE_PLAYER_CLUB_ID_SAVE_ADDR@ha
 stw		0, ACTIVE_PLAYER_CLUB_ID_SAVE_ADDR@l(9)
 
@@ -62,7 +62,7 @@ stw		11, IMPACT_DELTA_FROM_IMPACT_STRUCT(9)
 done_cap_impact_delta:
 
 # gecko end injection
-.4byte	0x00000000
+.zero	4
 
 # add delta_theta when perfect impact is missed
 # note: (processed control stat) * (miss perfect impact %) is in f31, and (processed control stat) is from 0.02(max control) to 0.42(min control)
