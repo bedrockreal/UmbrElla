@@ -33,7 +33,7 @@ end1:
 lis		8, 0x804e
 
 # gecko padding
-.4byte	0x00000000
+.zero	4
 
 # 2nd pass: tweaking the impact timing slider
 .4byte	0xc2475974
@@ -51,16 +51,14 @@ cmpwi	cr7, 11, -MAX_IMPACT_SLIDER_DRAW_SIZE
 crand	cr0*4+eq, cr0*4+eq, cr7*4+lt
 bne		end2
 
-lwz		11, SHOT_CHARGE_NUM_FRAMES_FROM_IMAPCT_STRUCT(30)
+# fix: load the normalised (<= 50) swing power value
+lwz		11, SWING_POWER_FROM_PLAYER_PARAMETERS(9)
+# lwz		11, SHOT_CHARGE_NUM_FRAMES_FROM_IMAPCT_STRUCT(30)
 neg		11, 11
 
 end2:
 # end gecko code
 .zero	4
-
-.set	NO_STANDALONE, 1
-.include "practice-swing.s"
-.set	NO_STANDALONE, 0
 
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
