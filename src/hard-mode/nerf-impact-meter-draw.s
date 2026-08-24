@@ -8,7 +8,7 @@
 
 # nerf power bar: inject into 0x804742f0
 .4byte	0xc24742f0
-.4byte	0x00000006
+.4byte	0x00000005
 
 # 1st pass: on charging
 
@@ -18,9 +18,9 @@
 # only do it if 1. action state == charging, and 2. we're not putting
 lwz		3, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
 cmpwi	3, ACTION_STATE_CHARGING
-lwz		3, CLUB_ID_FROM_PLAYER_PARAMETERS(9)
-cmpwi	cr7, 3, CLUB_ID_PUTTER
-crandc	cr0*4+eq, cr0*4+eq, cr7*4+eq
+# lwz		3, CLUB_ID_FROM_PLAYER_PARAMETERS(9)
+# cmpwi	cr7, 3, CLUB_ID_PUTTER
+# crandc	cr0*4+eq, cr0*4+eq, cr7*4+eq
 bne+	end1
 
 li		3, MAX_POWER_BAR_DRAW_SIZE
@@ -33,20 +33,24 @@ end1:
 lis		8, 0x804e
 
 # gecko padding
+nop
 .zero	4
 
 # 2nd pass: tweaking the impact timing slider
 .4byte	0xc2475974
-.4byte	0x00000005
+.long	7
 
-# still in drawImpactMeterOverlay, make third click thing visible within MAX_POWER_BAR_DRAW_SIZE frames only
+# still in drawImpactMeterOverlay, make third click slider visible within MAX_POWER_BAR_DRAW_SIZE frames only
+
+# check action state == SWING && impactNumButtonPresses == 0 -> then check r11 < -MAX_IMPACT_SLIDER_DRAW_SIZE
+lwz		9, PLAYER_PARAMETERS_FROM_IMPACT_STRUCT(30)
+lwz		11, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
+lbz		3, IMPACT_NUM_BUTTON_PRESSES_FROM_PLAYER_PARAMETERS(9)
+cmpwi	11, ACTION_STATE_SWING
+cmpwi	cr6, 3, 0
 
 lwz		11, 0x8(30)
-
-# check action state == SWING && r11 < -MAX_IMPACT_SLIDER_DRAW_SIZE
-lwz		9, PLAYER_PARAMETERS_FROM_IMPACT_STRUCT(30)
-lwz		3, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
-cmpwi	3, ACTION_STATE_SWING
+crand	cr0*4+eq, cr0*4+eq, cr6*4+eq
 cmpwi	cr7, 11, -MAX_IMPACT_SLIDER_DRAW_SIZE
 crand	cr0*4+eq, cr0*4+eq, cr7*4+lt
 bne		end2
@@ -58,6 +62,7 @@ neg		11, 11
 
 end2:
 # end gecko code
+nop
 .zero	4
 
 .if		(NO_STANDALONE != 1)
