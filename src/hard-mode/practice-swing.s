@@ -7,7 +7,7 @@
 .endif
 
 # force manual swing, and set practice swing on A-A
-# TODO: fix putting, fix slider on 2nd click
+# TODO: fix putting
 # 1. don't draw right-to-left slider on auto swing
 .long	0xc6475720
 .long	0x804758d0
@@ -23,7 +23,7 @@ nop
 # note: at 0x80414348, r9 := great player state
 # note: r10 == 0x80530000
 .long	0x0641434c
-.long	0x00000044
+.long	0x00000048
 li		30, 0
 stw		30, 0x7398(10) # set power meter display mode = 0, so that rangee marker can be seen
 li		0, ACTION_STATE_IDLE
@@ -56,7 +56,7 @@ stb		3, HOLE_STROKE_COUNT_FROM_BASE(11)
 lwz		3, 0x18(9)
 
 # this is 0x80414370, bl to 0x804152e8
-.long	0x48000f39
+.long	0x48000f79
 
 cmpwi	3, 0
 beq		end_restore_stroke_count
@@ -67,14 +67,16 @@ lbz		3, ROUND_STROKE_COUNT_FROM_BASE(11)
 subi	3, 3, 1
 stb		3, ROUND_STROKE_COUNT_FROM_BASE(11)
 
+
 end_restore_stroke_count:
-nop
+# this is 0x80414390, jump to 0x804144b4 (if power shot, always recover)
+.long	0x48000124
 
 # 5. no impact anim on auto swing
 
 .long	0xc2426148
-.long	0x0000000c
-# actionState == 12 && impact mode == auto && timer + anim frame >= 100 -> force no advance
+.long	0x00000009
+# actionState == 12 && impact mode == auto && delta > 0 -> force no advance
 
 # r11, r9 free
 # check auto swing && impact timing > 0
@@ -88,22 +90,11 @@ cmpwi	11, ACTION_STATE_SWING
 lwz		11, IMPACT_MODE_FROM_PLAYER_PARAMETERS(9)
 cmpwi	cr7, 11, 1
 
-# load timer
+# check timer >= 0
 lis		9, IMPACT_TIMER_FOR_ANIM@ha
 lwz		11, IMPACT_TIMER_FOR_ANIM@l(9)
 lwz		9, ANIM_FROM_GREAT_PLAYER_STATE(31)
-
-# load animation stopwatch, make it an integer
-# storing at FREE_CAMERA_ABS_COORDS_ADDR is fine as it would be overwritten in free camera mode
-lfs		0, STOPWATCH_FROM_ANIM(9)
-fctiwz	13, 0
-lis		9, FREE_CAMERA_ABS_COORDS_ADDR@h
-stfdu	13, FREE_CAMERA_ABS_COORDS_ADDR@l(9)
-lwz		9, 0x4(9)
-
-# check timer + stopwatch >= 100
-add		11, 11, 9
-cmpwi	cr6, 11, 99
+cmpwi	cr6, 11, -1
 crand	cr7*4+eq, cr7*4+eq, cr6*4+gt
 crand	cr0*4+eq, cr0*4+eq, cr7*4+eq
 bne		end_delay_anim
@@ -193,8 +184,23 @@ subi	9, 9, 1
 rlwinm	9, 9, 1, 30, 30
 .zero	4
 
-# 9. don't decrement power shot
-# TODO
+# 9. don't recover power shot twice
+# on practice swing or putting, skip 'nice shot'... check: jump from 0x804140ac to 0x804141dc
+.long	0xc24140ac
+.long	4
+
+lwz		8, IMPACT_MODE_FROM_PLAYER_PARAMETERS(31)
+cmpwi	8, 0
+beq		no_skip_nice_shot_check
+
+lis		9, 0x8041
+ori		9, 9, 0x41dc
+mtctr	9
+bctr
+
+no_skip_nice_shot_check:
+# no need to restore original instr: li 8, 0
+.zero	4
 
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
