@@ -121,7 +121,20 @@ cmpwi	7, 0
 .zero	4
 
 # 6. fix range marker after practice swing
-# TODO
+.long	0xc24150ac
+.long	4
+lwz		3, IMPACT_MODE_FROM_PLAYER_PARAMETERS(31)
+subic.	3, 3, 1
+bne+	end_skip_update_range_marker
+
+# the fix: set 0x1d0(31) := range marker, then impact mode := 0
+lwz		0, 0x73a0(11)
+stw		0, SWING_POWER_FROM_PLAYER_PARAMETERS(31)
+stw		3, IMPACT_MODE_FROM_PLAYER_PARAMETERS(31)
+
+end_skip_update_range_marker:
+stw		0, 0x73a0(11)
+.zero	4
 
 # 7. reset Mario on 1st press
 .long	0xc2413ca4
