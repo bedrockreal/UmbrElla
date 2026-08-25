@@ -5,10 +5,9 @@
 .4byte	0x3f608039
 .endif
 
-
 # inject into 0x80411fcc
 .long	0xc2411fcc
-.long	0x00000006
+.long	0x00000007
 
 # note: scale stored delta by f0
 # note: r9, r0 and r10 are free. r3-r5 are already loaded
@@ -16,13 +15,25 @@
 # load f0 := 10
 lfs		0, CONST_10_ADDR@l(9)
 
+.set	STACK_OFFSET,	0x148
+
+# check if free-camera enabled
+lis		9, FREE_CAMERA_STATUS_ADDR@ha
+lwz		10, FREE_CAMERA_STATUS_ADDR@l(9)
+
+# the original instr.
+stfs	13, STACK_OFFSET(1)
+
+# if free-camera not enabled, end
+cmpwi	10, FREE_CAMERA_ACTIVE
+bne		end_camera_delta
+
 # set up addresses and CTR
 .set	__TMP, FREE_CAMERA_DELTA_ADDR-0x4
-lis		9, __TMP@h
-ori		9, 9, __TMP@l
-li		10, 3
+addi	9, 9, __TMP@l
+#li		10, 3
 mtctr	10
-addi	10, 1, 0x144
+addi	10, 1, STACK_OFFSET-0x4
 
 loop:
 lfsu	13, 0x4(9)
@@ -31,7 +42,7 @@ stfsu	13, 0x4(10)
 bdnz+	loop
 
 # gecko inject end pad
-nop
+end_camera_delta:
 .zero	4
 
 .if		(NO_STANDALONE != 1)

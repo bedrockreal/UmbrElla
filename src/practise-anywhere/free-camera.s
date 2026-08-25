@@ -22,7 +22,9 @@
 
 # inject the main code
 .long	0xc2424fb0
-.long	0x0000002a
+.long	40
+
+# note: r5 - r7 are free
 
 # restore replaced instruction
 stw		0, 0x1c4(1)
@@ -41,9 +43,9 @@ bne		free_camera_end
 
 # check Z hold + X press
 lhz		10, BUTTON_HOLD_FROM_PLAYER_PARAMETERS(9)
-cmpwi	10, MODIFIER_MASK+FREE_CAMERA_ACTIVATE_PRESS_MASK
+cmpwi	cr7, 10, MODIFIER_MASK+FREE_CAMERA_ACTIVATE_PRESS_MASK
 lhz		10, BUTTON_PRESS_FROM_PLAYER_PARAMETERS(9)
-cmpwi	cr7, 10, FREE_CAMERA_ACTIVATE_PRESS_MASK
+subic.	10, 10, FREE_CAMERA_ACTIVATE_PRESS_MASK
 crand	cr0*4+eq, cr0*4+eq, cr7*4+eq
 bne		free_camera_end
 
@@ -51,30 +53,22 @@ bne		free_camera_end
 li		0, ACTION_STATE_PANNING
 stw		0, ACTION_STATE_FROM_PLAYER_PARAMETERS(9)
 
-li		5, 0
-li		6, 0
-li		7, 0
+# clear FREE_CAMERA_DELTA_ADDR
+# hack: r10 == 0 if we reach here
 lis		9, FREE_CAMERA_DELTA_ADDR@ha
-addi	9, 9, FREE_CAMERA_DELTA_ADDR@l
-stswi	5, 9, 12
+stwu	10, FREE_CAMERA_DELTA_ADDR@l(9)
+stwu	10, 4(9)
+stwu	10, 4(9)
 
 li		3, FREE_CAMERA_ACTIVE
 b		write_free_camera
 
 free_camera_mode:
-# load analogue stick, and force it to zero
-# li		0, 0
-# lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
-# lfs		13, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9)
-# stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9)
-# lfs		12, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
-# stw		0, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS+0x4(9)
-
-# try using paired singles instructions
+# load analogue stick using paired singles instructions
 lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
 psq_l	13, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9), 0, 0
-ps_sub	12, 13, 13
-psq_st	12, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9), 0, 0
+# ps_sub	12, 13, 13
+# psq_st	12, ANALOGUE_STICK_FROM_PLAYER_PARAMETERS(9), 0, 0
 
 # add analogue delta to free camera coordinates
 lis		9, FREE_CAMERA_DELTA_ADDR@ha
@@ -85,14 +79,6 @@ ps_merge10		13, 13, 13
 psq_l	12, 0x4(9), 0, 0
 ps_add	12, 12, 13
 psq_st	12, 0x4(9), 0, 0
-
-# the old instrs.
-# lfs		0, 0x8(9) # y
-# fadds	0, 13, 0
-# stfs	0, 0x8(9)
-# lfs		0, 0x4(9) # z
-# fadds	0, 12, 0
-# stfs	0, 0x4(9)
 
 check_drop_ball:
 # check if already in drop ball state
@@ -142,9 +128,9 @@ li		10, GREAT_GAMEPLAY_STATUS_BALL_FLYING
 stw		10, GAMEPLAY_STATUS_FROM_GREAT_PLAYER_STATE(31)
 # also increment stroke count
 lwz		9, BALL_FLYING_STATE_BASE_FROM_GREAT_PLAYER_STATE(31)
-lbz		10, STROKE_COUNT_BYTE_FROM_BASE(9)
+lbz		10, HOLE_STROKE_COUNT_FROM_BASE(9)
 addi	10, 10, 1
-stb		10, STROKE_COUNT_BYTE_FROM_BASE(9)
+stb		10, HOLE_STROKE_COUNT_FROM_BASE(9)
 
 # done -> set status := inactive
 li		10, DROP_BALL_INACTIVE
@@ -169,8 +155,6 @@ lhz		0, BUTTON_PRESS_FROM_PLAYER_PARAMETERS(9)
 andi.	0, 0, FREE_CAMERA_EXIT_BUTTON_MASK
 
 beq		free_camera_end
-# bne		exit_free_camera_mode
-# b		free_camera_end
 
 exit_free_camera_mode:
 li		3, FREE_CAMERA_INACTIVE
@@ -182,41 +166,42 @@ stw		3, FREE_CAMERA_STATUS_ADDR@l(9)
 free_camera_end:
 .zero	4
 
-# add the code that modifies shot parameters
-.include "drop-ball-mod-params.s"
-
-# restore camera-related code if free-camera mode != 1
-.long	0x221d1c20
-.long	0x00000001
-
-.long	0x04411f60
-.long	0x40a102c4 # ble 0x80412224
-
-.long	0x04411fcc
-stfs	13, 0x148(1)
-
-.long	0x04410cec
-lhz		0, 0x10c(3)
-
-.long	0x0441293c
-fabs	0, 0
-
-# if free-camera mode == 1,
-.long	0x201d1c21
-.long	0x00000001
-
-# remove (if 0.98 < cameraSimLine%) check
-.long	0x04411f60
-nop
-
-# don't move impact marker with Z + analogue stick
+# always: don't move impact marker with Z + analogue stick
 .long	0x04410cec
 li		0, 0
 
-# inject code modifying the camera
-.include "camera-coords.s"
+# add the code that modifies shot parameters
+.include "drop-ball-mod-params.s"
+
+# add the code to load camera delta for projection
+# the code to check for free-camera is already included.
 .include "camera-delta.s"
+
+# dumps the camera's coordinates into a static place in memory: always do that
+.include "camera-coords.s"
+
+# on c stick up/down, do not move along sim line if free-camera is active; instead, add to delta x
 .include "camera-front.s"
+
+# modify comparison at 0x80411f5c (compare 0.98 and cameraSimLine%)
+.long	0xc2411f50
+.long	3
+
+# the hack: modify r9 such that f31 := (free-camera ? -4 : 0.98)
+# load free-camera
+lis		9, FREE_CAMERA_STATUS_ADDR@ha
+lwz		11, FREE_CAMERA_STATUS_ADDR@l(9)
+
+# the original instr.
+lis		9, 0x804f
+
+# set r11 = (free-camera ? 60 : 0), r9 -= r11
+mulli	11, 11, 20
+subf	9, 11, 9
+
+.zero	4
+
+# original 0x80411f60: if f0 <= f31 (f31 == 0.98), don't project delta
 
 # that's it
 .4byte	0xe0000000

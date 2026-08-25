@@ -1,17 +1,17 @@
 .if		(NO_STANDALONE != 1)
+.include "constants.asm"
+
 # check for the right file
 .4byte	0x20416dbc
 .4byte	0x3f608039
 .endif
 
-.include "constants.asm"
-
 # note: inject into 0x8041233c
 # dumps the camera's coordinates into a static place in memory
 .long	0xc241233c
-.long	0x00000003
+.long	3
 
-
+# x, z, y = f13, f12, f0
 lis		9, FREE_CAMERA_ABS_COORDS_ADDR@ha
 stfsu	13, FREE_CAMERA_ABS_COORDS_ADDR@l(9)
 stfsu	12, 0x4(9)
