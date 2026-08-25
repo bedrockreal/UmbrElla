@@ -25,7 +25,7 @@ nop
 .long	0x0641434c
 .long	0x00000048
 li		30, 0
-stw		30, 0x7398(10) # set power meter display mode = 0, so that rangee marker can be seen
+stw		30, 0x7398(10) # set power meter display mode = 0, so that range marker can be seen
 li		0, ACTION_STATE_IDLE
 stw		0, ACTION_STATE_FROM_PLAYER_PARAMETERS(31)
 
@@ -62,7 +62,7 @@ cmpwi	3, 0
 beq		end_restore_stroke_count
 
 lwz		9, GREAT_PLAYER_STATE_FROM_PLAYER_PARAMETERS(31)
-lwz		11, BALL_POSITION_FROM_BALL_FLYING_STATE(9)
+lwz		11, BALL_FLYING_STATE_BASE_FROM_GREAT_PLAYER_STATE(9)
 lbz		3, ROUND_STROKE_COUNT_FROM_BASE(11)
 subi	3, 3, 1
 stb		3, ROUND_STROKE_COUNT_FROM_BASE(11)
@@ -129,7 +129,7 @@ stw		0, 0x73a0(11)
 
 # 7. reset Mario on 1st press
 .long	0xc2413ca4
-.long	0x00000002
+.long	2
 
 # note: r11 == impact struct addr.
 stw		9, MARIO_THUMBS_UP_FROM_IMPACT_STRUCT(11)
@@ -151,16 +151,13 @@ sth		0, 0x24c(31)
 sth		0, 0x248(31)
 lhz		9, BUTTON_PRESS_FROM_PLAYER_PARAMETERS(31)
 
-.long	0x04413d20
-cmpwi	10, 0
 # 8.2: check if A pressed: if yes, skip lie RNG code
-
 .long	0xc2413d1c
-.long	0x00000004
+.long	4
 
 # if A pressed, jump
 andi.	9, 9, 0x100
-beq		end_skip_lie_collapse
+beq-	end_skip_lie_collapse
 
 lis		9, 0x8041
 ori		9, 9, 0x3ddc
@@ -168,7 +165,7 @@ mtctr	9
 bctr
 
 end_skip_lie_collapse:
-nop
+cmpwi	10, 0
 .zero	4
 
 # 8.3: on auto swing, don't set lie display mode
