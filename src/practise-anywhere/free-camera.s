@@ -1,5 +1,4 @@
-# note: due to how big this gecko code is, the game sometimes crashes when you apply this code alongside other codes on a real Wii (perhaps also GameCube).
-# this may be an issue with the gecko code size.
+# note: the game crashes upon entering training mode if you apply this code alongside other codes on a real Wii (perhaps also GameCube).
 
 # Overwrite debug strings, if we haven't
 # note: reserve 0x100 bytes from 0x801d1c20
