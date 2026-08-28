@@ -8,11 +8,6 @@
 .4byte	0x3f608039
 .endif
 
-# note: split free camera driver code apart
-
-# set NO_STANDALONE for all sub-codes included by this file
-.set	NO_STANDALONE, 1
-
 # inject the main code
 .long	0xc2424fb0
 .long	35
@@ -27,7 +22,7 @@ stw		0, 0x1c4(1)
 # r6 := button hold mask
 # r7 := button press mask
 # r9 := player params
-# r11 := 0x801d0000
+# r11 := 0x80000000
 lis		11, FREE_CAMERA_STATUS_ADDR@ha
 lwz		9, PLAYER_PARAMETERS_FROM_GREAT_PLAYER_STATE(31)
 lhz		6, BUTTON_HOLD_FROM_PLAYER_PARAMETERS(9)

@@ -7,7 +7,7 @@
 .include "constants.asm"
 
 .long	0xc241293c
-.long	5
+.long	6
 
 # check for free-camera
 lis		9, FREE_CAMERA_STATUS_ADDR@ha
@@ -18,12 +18,14 @@ bne		end_camera_front
 lfsu	11, FREE_CAMERA_DELTA_ADDR@l(9)
 fadds	11, 11, 0
 stfs	11, 0(9)
-fsubs	31, 0, 0
+fsubs	0, 0, 0
+fmr		31, 0
 
 end_camera_front:
 # the original instruction
-# note: f0 == f31, use this hack
-fabs	0, 31
+# note: r9 must equal 0x804f0000
+lis		9, 0x804f
+fabs	0, 0
 .zero	4
 
 .if		(NO_STANDALONE != 1)

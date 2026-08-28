@@ -1,18 +1,8 @@
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
 
-# note: given that free-camera/practise-anywhere doesn't work on Nintendont, let's keep the landing star and height map visible.
-
-# Overwrite debug strings, if we haven't
-# note: reserve 0x100 bytes from 0x801d1c20
-
-.long	0x201d1c24
-.long	0x6462616e
-.long	0x001d1c20
-.long	0x00ff0000
-
 # check for the right file
-.long	0x20416dbd
+.long	0x20416dbc
 .long	0x3f608039
 .endif
 

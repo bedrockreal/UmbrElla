@@ -10,26 +10,27 @@
 # 1: modify comparison at 0x80411f5c (compare 0.98 and cameraSimLine%), so that in free-camera mode there is always projection
 
 # note: original 0x80411f60: if f0 <= f31 (f31 == 0.98), don't project delta
-.long	0xc2411f50
+# # to force projection, we mustn't let the program branch on the ble instr.
+# ble jumps if the CR0[GT] (bit 1) is false.
+
+.long	0xc2411f5c
 .long	3
 
-# the hack: modify r9 such that f31 := (free-camera ? -4 : 0.98)
+# the original instr.
+fcmpu	cr0, 0, 31
+
 # load free-camera
 lis		9, FREE_CAMERA_STATUS_ADDR@ha
 lwz		11, FREE_CAMERA_STATUS_ADDR@l(9)
+cmpwi	cr7, 11, FREE_CAMERA_ACTIVE
 
-# the original instr.
-lis		9, 0x804f
-
-# set r11 = (free-camera ? 60 : 0), r9 -= r11
-mulli	11, 11, 20
-subf	9, 11, 9
+cror	cr0*4+gt, cr0*4+gt, cr7*4+eq
 
 .zero	4
 
 # 2: actually load the delta
 .long	0xc2411fcc
-.long	0x00000007
+.long	7
 
 # note: scale stored delta by f0
 # note: r9, r0 and r10 are free. r3-r5 are already loaded
@@ -53,7 +54,6 @@ bne		end_camera_delta
 # set up addresses and CTR
 .set	__TMP, FREE_CAMERA_DELTA_ADDR-0x4
 addi	9, 9, __TMP@l
-#li		10, 3
 mtctr	10
 addi	10, 1, STACK_OFFSET-0x4
 

@@ -74,6 +74,6 @@ YButtonNotPressed:
 lis		9, 0x804f
 
 # end gecko code
-.4byte	0x00000000
+.zero	4
 .4byte	0xe0000000
 .4byte	0x80008000

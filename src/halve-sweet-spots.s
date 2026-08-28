@@ -2,43 +2,35 @@
 .include "constants.asm"
 
 # check for the right file
-.4byte	0x20416dbc
-.4byte	0x3f608039
+.long	0x20416dbc
+.long	0x3f608039
 .endif
 
-.set	SWEET_SPOT_SIZE_ARR_ADDR,	0x804ec700
+# save the sweet spot delta somewhere
+.long	0xc2417874
+.long	3
 
-# inject 0x38 bytes into 0x80417888
-.4byte	0x06417888
-.4byte	0x00000038
-
-# note: r3 contains the impact stat just returned
-# and r31 contains shotDifficulty
-
-lis		9, SWEET_SPOT_SIZE_ARR_ADDR@ha
-addi	9, 9, SWEET_SPOT_SIZE_ARR_ADDR@l
-
-subfic	3, 3, 10
-mulli	3, 3, 5
-add		3, 3, 31
-
+# the original instr.
 add		3, 3, 9
-lbz		9, -1(3)
 
-# now r9 contains the raw sweet spot size from memory
-# load shotMode from memory
-
+# r9 is now free
 lwz		4, SHOT_MODE_FROM_PLAYER_PARAMETERS(29)
-addi	3, 9, -1
-add		9, 3, 4
+subi	4, 4, 1
+lis		9, SWEET_SPOT_DELTA_SAVE_ADDR@ha
+stw		4, SWEET_SPOT_DELTA_SAVE_ADDR@l(9)
 
-# pad: add 4 nops
-nop
-nop
-nop
-nop
+.zero	4
+
+# load the delta and add to ret
+.long	0x064178b4
+.long	0xc
+
+lis		9, SWEET_SPOT_DELTA_SAVE_ADDR@ha
+lwz		9, SWEET_SPOT_DELTA_SAVE_ADDR@l(9)
+add		9, 9, 3
+.zero	4
 
 .if		(NO_STANDALONE != 1)
-.4byte	0xe0000000
-.4byte	0x80008000
+.long	0xe0000000
+.long	0x80008000
 .endif

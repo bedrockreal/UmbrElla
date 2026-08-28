@@ -1,15 +1,7 @@
 # note: the game crashes upon entering training mode if you apply this code alongside other codes on a real Wii (perhaps also GameCube).
 
-# Overwrite debug strings, if we haven't
-# note: reserve 0x100 bytes from 0x801d1c20
-
-.long	0x201d1c24
-.long	0x6462616e
-.long	0x001d1c20
-.long	0x00ff0000
-
 # check for the right file
-.long	0x20416dbd
+.long	0x20416dbc
 .long	0x3f608039
 
 # note: split free camera driver code apart
@@ -35,7 +27,7 @@ li		0, 0
 # dumps the camera's coordinates into a static place in memory: always do that
 .include "practise-anywhere/camera-coords.s"
 
-# on c stick up/down, do not move along sim line if free-camera is active; instead, add to delta x
+# on c stick up/down, do not move along sim line if free-camera is active; instead, add to dx @ for projection
 .include "practise-anywhere/camera-front.s"
 
 # that's it
