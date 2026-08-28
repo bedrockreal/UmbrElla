@@ -1,20 +1,14 @@
 # note: the game crashes upon entering training mode if you apply this code alongside other codes on a real Wii (perhaps also GameCube).
 
-# Overwrite debug strings, if we haven't
-# note: reserve 0x100 bytes from 0x801d1c20
-
-.long	0x201d1c24
-.long	0x6462616e
-.long	0x001d1c20
-.long	0x00ff0000
+.if		(NO_STANDALONE != 1)
+.include "constants.asm"
 
 # check for the right file
-.long	0x20416dbd
-.long	0x3f608039
+.4byte	0x20416dbc
+.4byte	0x3f608039
+.endif
 
 # note: split free camera driver code apart
-
-.include "constants.asm"
 
 # set NO_STANDALONE for all sub-codes included by this file
 .set	NO_STANDALONE, 1
@@ -175,43 +169,7 @@ stw		3, FREE_CAMERA_STATUS_ADDR@l(11)
 free_camera_end:
 .zero	4
 
-# always: don't move impact marker with Z + analogue stick
-.long	0x04410cec
-li		0, 0
-
-# add the code that modifies shot parameters
-.include "drop-ball-mod-params.s"
-
-# add the code to load camera delta for projection
-# the code to check for free-camera is already included.
-.include "camera-delta.s"
-
-# dumps the camera's coordinates into a static place in memory: always do that
-.include "camera-coords.s"
-
-# on c stick up/down, do not move along sim line if free-camera is active; instead, add to delta x
-.include "camera-front.s"
-
-# modify comparison at 0x80411f5c (compare 0.98 and cameraSimLine%)
-.long	0xc2411f50
-.long	3
-
-# the hack: modify r9 such that f31 := (free-camera ? -4 : 0.98)
-# load free-camera
-lis		9, FREE_CAMERA_STATUS_ADDR@ha
-lwz		11, FREE_CAMERA_STATUS_ADDR@l(9)
-
-# the original instr.
-lis		9, 0x804f
-
-# set r11 = (free-camera ? 60 : 0), r9 -= r11
-mulli	11, 11, 20
-subf	9, 11, 9
-
-.zero	4
-
-# original 0x80411f60: if f0 <= f31 (f31 == 0.98), don't project delta
-
-# that's it
-.long	0xe0000000
-.long	0x80008000
+.if		(NO_STANDALONE != 1)
+.4byte	0xe0000000
+.4byte	0x80008000
+.endif

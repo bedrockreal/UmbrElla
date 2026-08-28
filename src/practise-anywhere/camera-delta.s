@@ -5,7 +5,29 @@
 .4byte	0x3f608039
 .endif
 
-# inject into 0x80411fcc
+# copy camera delta from static to stack for projection
+
+# 1: modify comparison at 0x80411f5c (compare 0.98 and cameraSimLine%), so that in free-camera mode there is always projection
+
+# note: original 0x80411f60: if f0 <= f31 (f31 == 0.98), don't project delta
+.long	0xc2411f50
+.long	3
+
+# the hack: modify r9 such that f31 := (free-camera ? -4 : 0.98)
+# load free-camera
+lis		9, FREE_CAMERA_STATUS_ADDR@ha
+lwz		11, FREE_CAMERA_STATUS_ADDR@l(9)
+
+# the original instr.
+lis		9, 0x804f
+
+# set r11 = (free-camera ? 60 : 0), r9 -= r11
+mulli	11, 11, 20
+subf	9, 11, 9
+
+.zero	4
+
+# 2: actually load the delta
 .long	0xc2411fcc
 .long	0x00000007
 
