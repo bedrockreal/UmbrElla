@@ -1,5 +1,5 @@
-.if		(NERF_SIM_OLD_INCLUDED == 0)
-.set	NERF_SIM_OLD_INCLUDED, 1
+.ifndef	NERF_SIM
+.set	NERF_SIM, 1
 
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"

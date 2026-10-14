@@ -1,5 +1,5 @@
-.if     (PRACTICE_SWING_INCLUDED == 0)
-.set    PRACTICE_SWING_INCLUDED, 1
+.ifndef	PRACTICE_SWING
+.set    PRACTICE_SWING, 1
 
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"

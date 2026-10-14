@@ -1,5 +1,5 @@
 .ifndef	CAMERA_DELTA
-.SET	CAMERA_DELTA
+.set	CAMERA_DELTA, 1
 
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"

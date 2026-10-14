@@ -1,5 +1,5 @@
-.if		(NERF_SIM_INCLUDED == 0)
-.set	NERF_SIM_INCLUDED,	1
+.ifndef	NERF_SIM
+.set	NERF_SIM,	1
 
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
@@ -11,7 +11,6 @@
 
 # if state is not 2D view, then
 # 1. display only the first SIM_LINE_NERF_VISIBLE_FRAMES of the sim line
-# # 2. don't draw height map and star
 
 # TODO: maybe special handle if mode == practice?
 

@@ -1,5 +1,5 @@
-.if		(THREE_CLICK_PUTT_INCLUDED == 0)
-.set	THREE_CLICK_PUTT_INCLUDED, 1
+.ifndef	THREE_CLICK_PUTT
+.set	THREE_CLICK_PUTT, 1
 
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"

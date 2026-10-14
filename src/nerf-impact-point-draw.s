@@ -1,5 +1,5 @@
-.if		(NERF_IMPACT_POINT_INCLUDED == 0)
-.set	NERF_IMPACT_POINT_INCLUDED, 1
+.ifndef	NERF_IMPACT_POINT
+.set	NERF_IMPACT_POINT, 1
 
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"

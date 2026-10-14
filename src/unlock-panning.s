@@ -1,5 +1,5 @@
-.if		(UNLOCK_PANNING_INCLUDED == 0)
-.set	UNLOCK_PANNING_INCLUDED, 1
+.ifndef	UNLOCK_PANNING
+.set	UNLOCK_PANNING, 1
 
 .if		(NO_STANDALONE != 1)
 # check for the right file

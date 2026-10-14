@@ -1,5 +1,5 @@
-.if		(PRACTISE_ANYWHERE_INCLUDED == 0)
-.set	PRACTISE_ANYWHERE_INCLUDED, 1
+.ifndef	PRACTISE_ANYWHERE
+.set	PRACTISE_ANYWHERE, 1
 
 # note: the game crashes upon entering training mode if you apply this code alongside other codes on a real Wii (perhaps also GameCube).
 
