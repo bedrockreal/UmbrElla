@@ -17,8 +17,6 @@
 # TODO: maybe special handle if mode == practice?
 
 # the main code:
-.set	SIM_LINE_DEFAULT_VISIBLE_FRAMES,	0x707
-.set	SIM_LINE_NERF_VISIBLE_FRAMES,		0x8
 
 modify_sim:
 # check if action state is neither 2d nor green view

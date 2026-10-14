@@ -95,3 +95,8 @@
 # .set	IGNORE_BUTTON_MASK,		0x01f # Z + D-pad
 .set	FREE_CAMERA_EXIT_BUTTON_MASK,		0xffe0 # complement of above
 .set	PRACTICE_RESTORE_SIM_HOLD_MASK,	0x110 # Z+A
+
+# sim line: needed for two codes, so put here
+.set	SIM_LINE_DEFAULT_VISIBLE_FRAMES,	0x707
+.set	SIM_LINE_NERF_VISIBLE_FRAMES,		0x8
+
