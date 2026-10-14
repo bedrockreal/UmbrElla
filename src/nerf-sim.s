@@ -1,3 +1,6 @@
+.if		(NERF_SIM_OLD_INCLUDED == 0)
+.set	NERF_SIM_OLD_INCLUDED, 1
+
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
 
@@ -126,4 +129,6 @@ li		28, SIM_LINE_NERF_VISIBLE_FRAMES
 .if		(NO_STANDALONE != 1)
 .long	0xe0000000
 .long	0x80008000
+.endif
+
 .endif

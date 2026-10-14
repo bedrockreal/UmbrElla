@@ -1,3 +1,6 @@
+.if		(CHANGE_SKIN_INCLDUED == 0)
+.set	CHANGE_SKIN_INCLDUED, 1
+
 #	Assembly code to change Neil/Ella's skin by pressing Y on the GBA CSS
 #	inject before 0x8040e378, only executed if player is at the GBA CSS and not changing character
 #	free registers: r0, r9, r10, r11
@@ -77,3 +80,5 @@ lis		9, 0x804f
 .zero	4
 .4byte	0xe0000000
 .4byte	0x80008000
+
+.endif

@@ -1,3 +1,6 @@
+.if		(NERF_IMPACT_METER_INCLUDED == 0)
+.set	NERF_IMPACT_METER_INCLUDED, 1
+
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
 
@@ -68,4 +71,6 @@ nop
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif
+
 .endif

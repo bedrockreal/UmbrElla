@@ -1,3 +1,6 @@
+.if		(THREE_CLICK_PUTT_INCLUDED == 0)
+.set	THREE_CLICK_PUTT_INCLUDED, 1
+
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
 
@@ -121,4 +124,6 @@ stw		0, 0x73c0(9)
 .if		(NO_STANDALONE != 1)
 .long	0xe0000000
 .long	0x80008000
+.endif
+
 .endif

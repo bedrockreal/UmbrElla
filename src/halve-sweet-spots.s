@@ -1,3 +1,6 @@
+.if		(HALVE_SWEET_SPOTS_INCLUDED == 0)
+.set	HALVE_SWEET_SPOTS_INCLUDED, 1
+
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
 
@@ -33,4 +36,6 @@ add		9, 9, 3
 .if		(NO_STANDALONE != 1)
 .long	0xe0000000
 .long	0x80008000
+.endif
+
 .endif

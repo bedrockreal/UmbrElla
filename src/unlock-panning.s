@@ -1,3 +1,6 @@
+.if		(UNLOCK_PANNING_INCLUDED == 0)
+.set	UNLOCK_PANNING_INCLUDED, 1
+
 .if		(NO_STANDALONE != 1)
 # check for the right file
 .4byte	0x20416dbc
@@ -24,4 +27,6 @@ fmr		0, 13
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif
+
 .endif

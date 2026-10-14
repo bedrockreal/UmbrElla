@@ -1,3 +1,6 @@
+.if		(PRACTISE_ANYWHERE_INCLUDED == 0)
+.set	PRACTISE_ANYWHERE_INCLUDED, 1
+
 # note: the game crashes upon entering training mode if you apply this code alongside other codes on a real Wii (perhaps also GameCube).
 
 # check for the right file
@@ -33,3 +36,5 @@ li		0, 0
 # that's it
 .long	0xe0000000
 .long	0x80008000
+
+.endif

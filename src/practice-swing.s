@@ -1,3 +1,6 @@
+.if     (PRACTICE_SWING_INCLUDED == 0)
+.set    PRACTICE_SWING_INCLUDED, 1
+
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
 
@@ -202,4 +205,6 @@ no_skip_nice_shot_check:
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif
+
 .endif
