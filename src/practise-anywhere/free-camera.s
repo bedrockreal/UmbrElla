@@ -1,4 +1,5 @@
-# note: the game crashes upon entering training mode if you apply this code alongside other codes on a real Wii (perhaps also GameCube).
+.ifndef	FREE_CAMERA
+.set	FREE_CAMERA, 1
 
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
@@ -167,4 +168,6 @@ free_camera_end:
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif
+
 .endif

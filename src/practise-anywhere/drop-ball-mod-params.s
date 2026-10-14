@@ -1,3 +1,6 @@
+.ifndef	DROP_BALL_MOD_PARAMS
+.set	DROP_BALL_MOD_PARAMS, 1
+
 .if		(NO_STANDALONE != 1)
 # check for the right file
 .4byte	0x20416dbc
@@ -41,4 +44,6 @@ lwz		0, 0xb14(30)
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif
+
 .endif

@@ -1,3 +1,6 @@
+.ifndef	CAMERA_COORDS
+.set	CAMERA_COORDS, 1
+
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
 
@@ -26,4 +29,6 @@ stfs	13, 0x158(1)
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif
+
 .endif

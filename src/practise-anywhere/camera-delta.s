@@ -1,3 +1,6 @@
+.ifndef	CAMERA_DELTA
+.SET	CAMERA_DELTA
+
 .if		(NO_STANDALONE != 1)
 .include "constants.asm"
 # check for the right file
@@ -70,4 +73,6 @@ end_camera_delta:
 .if		(NO_STANDALONE != 1)
 .4byte	0xe0000000
 .4byte	0x80008000
+.endif
+
 .endif
